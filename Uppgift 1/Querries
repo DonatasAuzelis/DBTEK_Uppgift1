@@ -1,0 +1,56 @@
+-- Lista antalet produkter per kategori. Listningen ska innehålla kategori-namn och antalet produkter.
+
+SELECT category.name AS kategori, COUNT(shoecategory.categoryid) AS antal FROM category
+LEFT JOIN shoecategory ON category.id = shoecategory.categoryid
+GROUP BY category.name
+ORDER BY antal DESC;
+
+-- Skapa en kundlista med den totala summan pengar som varje kund har handlat för.
+-- Kundens för- och efternamn, samt det totala värdet som varje person har shoppats för, skall visas.
+
+SELECT customer.first_name AS förnamn, customer.last_name AS efternamn, SUM(shoe.price) AS total_belopp FROM customer
+JOIN invoice ON customer.id = invoice.customerid
+JOIN shoeinvoice ON invoice.id = shoeinvoice.invoiceid
+JOIN shoe ON shoe.id = shoeinvoice.shoeid
+GROUP BY invoice.customerid
+ORDER BY total_belopp DESC;
+
+-- Vilka kunder har köpt lila sneakers i storlek 45 av märket Nike? Lista deras namn.
+-- Vilka kunder har köpt svarta sandaler i storlek 38 av märket Ecco? Lista deras namn.
+
+SELECT DISTINCT customer.first_name, last_name FROM customer
+JOIN invoice ON customer.id = invoice.customerid
+JOIN shoeinvoice ON invoice.id = shoeinvoice.invoiceid
+JOIN shoe ON shoeinvoice.shoeid = shoe.id
+JOIN shoecategory ON shoe.id = shoecategory.shoeid
+JOIN category ON shoecategory.categoryid = category.id
+JOIN brand ON shoe.brandid = brandid
+WHERE category.name = 'Sneakers' and shoe.color = 'Purple' and shoe.size = 45 and brand.name = 'Nike';
+
+-- Skriv ut en lista på det totala beställningsvärdet per ort där beställningsvärdet är större än 1000 kr. Ortnamn och värde ska visas.
+-- (det måste finnas orter i databasen där det harhandlats för mindre än 1000 kr för att visa att frågan är korrekt formulerad)
+
+SELECT customer.city AS ort, SUM(shoe.price) AS beställningsvärdet FROM customer
+JOIN invoice ON customer.id = invoice.customerid
+JOIN shoeinvoice ON invoice.id = shoeinvoice.invoiceid
+JOIN shoe ON shoe.id = shoeinvoice.shoeid
+GROUP BY invoice.customerid
+HAVING SUM(shoe.price) > 1000
+ORDER BY SUM(shoe.price) DESC;
+
+-- Skapa en topp-5 lista av de mest sålda produkterna.
+
+SELECT shoe.name AS TOP5, count(shoe.id) antal FROM shoe
+JOIN shoeinvoice ON shoe.id = shoeinvoice.shoeid
+GROUP BY shoe.id
+ORDER BY antal DESC
+LIMIT 5;
+
+-- Vilken månad hade du den största försäljningen?
+-- (det måste finnas data som anger försäljning för mer än en månad i databasen för att visa att frågan är korrekt formulerad)
+
+SELECT YEAR(invoice.date) as top_år, MONTH(invoice.date) as top_månad, SUM(shoe.price) AS total_belopp FROM invoice
+JOIN shoeinvoice ON invoice.id = shoeinvoice.invoiceid
+JOIN shoe ON shoe.id = shoeinvoice.shoeid
+GROUP BY YEAR(invoice.date), MONTH(invoice.date)
+ORDER BY total_belopp DESC;
